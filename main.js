@@ -27,10 +27,9 @@ if(config.dev == false) {
 }
 
 //main setting
-const isproxy = (config.isproxy == true || config.isproxy == false ? config.isproxy : false);
 app.disable('x-powered-by');
-app.set('trust proxy', isproxy);
-logger.info('isproxy: '+isproxy);
+app.set('trust proxy', config.trustproxy);
+logger.info('trust proxy: '+config.trustproxy);
 
 //health moniter
 app.all('/health', (req, res) => {
