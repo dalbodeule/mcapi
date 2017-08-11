@@ -39,7 +39,7 @@ app.all('/health', (req, res) => {
 //logger setup
 app.use((req, res, next) => {
     res.on('finish', () => {
-        logger.info(req.protocol+' '+req.method+' '+res.statusCode+' '+req['connection']['remoteAddress'].replace('::ffff:', '')+' '+req.originalUrl);
+        logger.info(req.protocol+' '+req.method+' '+res.statusCode+' '+req.ip.replace('::ffff:', '')+' '+req.originalUrl);
     });
     next();
 });
