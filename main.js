@@ -33,8 +33,18 @@ logger.info('trust proxy: '+config.trustproxy);
 
 //health moniter
 app.all('/health', (req, res) => {
-    res.send().end();
+    res.status(200).send().end();
 });
+
+//main page
+app.all('/', (req, res, next) => {
+    res.jsonp({
+        response: 'Welcome to mcapi.mori.space'
+    }).end();
+});
+
+//mcapi load
+const minecraft = require(__dirname+'/src/minecraft.js')(app, logger, db);
 
 //logger setup
 app.use((req, res, next) => {
@@ -49,22 +59,14 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
     if(err) {
         logger.error(err);
-        res.status(500).jsonp({error: 'Something went wrong. Please contact the administrator.'})
+        res.status(500).jsonp({error: 'Something went wrong. Please contact the administrator.'}).end();
     }
 });
+
 db.on('error', (err) => {
     logger.error(err);
 });
 
-//main page
-app.all('/', (req, res, next) => {
-    res.jsonp({
-        response: 'Welcome to mcapi.mori.space'
-    }).end();
-});
-
-//mcapi load
-const minecraft = require(__dirname+'/src/minecraft.js')(app, logger, db);
 
 const HTTPServer = http.createServer(app);
 HTTPServer.listen(config.http_port, () => {
