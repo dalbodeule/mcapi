@@ -1,6 +1,7 @@
 {
     "dev": true,
     "http_port": 80,
+    "isproxy": true,
     "redis": {
         "host": "host",
         "port": 6379,

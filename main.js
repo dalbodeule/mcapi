@@ -28,7 +28,7 @@ if(config.dev == false) {
 
 //main setting
 app.disable('x-powered-by');
-app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+app.set('trust proxy', (config.isproxy == true || config.isproxy == false ? config.isproxy : false));
 
 //health moniter
 app.all('/health', (req, res) => {
