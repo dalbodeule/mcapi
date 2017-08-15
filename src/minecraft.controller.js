@@ -142,5 +142,75 @@ module.exports = (logger, db) => {
                 } //redis query
             } //testcase isuuid
         }, //uuid function
+        history: async(req, res) => {
+            let queryUUID = req.params.uuid.replace(/\-/g, '').toLowerCase();
+            if(typeof queryUUID != 'string' && /^([a-z0-9]{32})$/.test(queryUUID) == false) {
+                res.status(400).jsonp({error: "query is not uuid", query: queryUUID}).end();
+            } else {
+                try {
+                    let query_time = Math.floor(Date.now()/1000);
+                    let redis = await db.getAsync('history-'+queryUUID);
+                    if(redis == null) {
+                        try {
+                            let query = await request({
+                                uri: 'https://api.mojang.com/user/profiles/'+queryUUID+'/names',
+                                method: "GET",
+                                json: true});
+                            if(query != null) {
+                                let result = {
+                                    uuid: queryUUID, full_uuid: queryUUID.substring(0,8)+'-'
+                                    +queryUUID.substring(8,12)+'-'+queryUUID.substring(12,16)+'-'
+                                    +queryUUID.substring(16,20)+'-'+queryUUID.substring(20,32),
+                                    history: query,
+                                    query: queryUUID, query_time: query_time,
+                                    cached: false
+                                };
+
+                                res.status(200).jsonp(result).end();
+
+                                result.cached = true;
+                                try {
+                                    await db.setAsync('history-'+queryUUID, JSON.stringify(result), 'EX', 60*5);
+                                } catch(e) {
+                                    logger.error(e);
+                                }
+                            } else { //testcase response is not null
+                                let result = {
+                                    error: true,
+                                    type: 'unregistered uuid',
+                                    query: queryUUID,
+                                    cached: false
+                                };
+
+                                res.status(200).jsonp(result).end();
+
+                                result.cached = true;
+                                try {
+                                    await db.setAsync('history-'+queryUUID, JSON.stringify(result), 'EX', 60*5);
+                                } catch(e) {
+                                    logger.error(e);
+                                }
+                            } //testcase response is not null
+                        } catch(e) {
+                            res.status(500).jsonp({error: "server error", query: queryUUID}).end();
+                            logger.error(e);
+                        }
+                    } else { //testcase is cached
+                        try {
+                            redis = JSON.parse(redis);
+                            let ttl = await db.ttlAsync('history-'+queryUUID);
+                            redis.expire = ttl;
+                            res.status(200).jsonp(redis).end();
+                        } catch(e) {
+                            res.status(500).jsonp({error: "server error", query: queryUUID}).end();
+                            logger.error(e);
+                        }
+                    } //testcase is cached
+                } catch(e) {
+                    res.status(500).jsonp({error: "server error", query: queryUUIDk}).end();
+                    logger.error(e);
+                } //redis query
+            } //testcase isuuid
+        } //history function
     } //return object
 }

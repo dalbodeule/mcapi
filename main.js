@@ -5,7 +5,7 @@ const config = require('./config.json'),
     express = require('express'), app = express(),
     fs = require('fs'), http = require('http'),
     path = require('path'), bluebird = require('bluebird'),
-    redis = require('redis');
+    redis = require('redis'), onFinished = require('on-finished');
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
@@ -36,6 +36,14 @@ app.all('/health', (req, res) => {
     res.status(200).send().end();
 });
 
+//logger setup
+app.use((req, res, next) => {
+    onFinished(res, (err, res) => {
+        logger.info(req.protocol+' '+req.method+' '+res.statusCode+' '+req.ip.replace('::ffff:', '')+' '+req.originalUrl);
+    });
+    next();
+});
+
 //main page
 app.all('/', (req, res, next) => {
     res.jsonp({
@@ -45,15 +53,6 @@ app.all('/', (req, res, next) => {
 
 //mcapi load
 const minecraft = require(__dirname+'/src/minecraft.js')(app, logger, db);
-
-//logger setup
-app.use((req, res, next) => {
-    res.on('finish', () => {
-        logger.info(req.protocol+' '+req.method+' '+res.statusCode+' '+req.ip.replace('::ffff:', '')+' '+req.originalUrl);
-    });
-    next();
-});
-
 
 //error handler
 app.use((err, req, res, next) => {
@@ -66,7 +65,6 @@ app.use((err, req, res, next) => {
 db.on('error', (err) => {
     logger.error(err);
 });
-
 
 const HTTPServer = http.createServer(app);
 HTTPServer.listen(config.http_port, () => {

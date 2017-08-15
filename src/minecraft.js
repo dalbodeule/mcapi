@@ -17,4 +17,11 @@ module.exports = (app, logger, db) => {
     app.get('/uuid', (req, res) => {
         res.status(404).jsonp({error: 'invalid uuid field'}).end();
     });
+
+    //history query
+    app.get('/history/:uuid', controller.history);
+    
+    app.get('/history', (req, res) => {
+        res.status(404).jsonp({error: 'invalid uuid field'}).end();
+    });
 }
