@@ -54,6 +54,10 @@ app.all('/', (req, res, next) => {
 //mcapi load
 const minecraft = require(__dirname+'/src/minecraft.js')(app, logger, db);
 
+
+app.use((req, res, next) => {
+    res.status(400).jsonp({error: true, type: "invalid uri"}).end();
+});
 //error handler
 app.use((err, req, res, next) => {
     if(err) {
