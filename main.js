@@ -5,7 +5,8 @@ const config = require('./config.json'),
     express = require('express'), app = express(),
     fs = require('fs'), http = require('http'),
     path = require('path'), bluebird = require('bluebird'),
-    redis = require('redis'), onFinished = require('on-finished');
+    redis = require('redis'), onFinished = require('on-finished'),
+    bodyParser = require('body-parser');
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
@@ -30,6 +31,9 @@ if(config.dev == false) {
 app.disable('x-powered-by');
 app.set('trust proxy', config.trustproxy);
 logger.info('trust proxy: '+config.trustproxy);
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
 
 //health moniter
 app.all('/health', (req, res) => {
